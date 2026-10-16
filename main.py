@@ -8,15 +8,18 @@ app = FastAPI()
 analyzer = AnalyzerEngine()
 anonymizer = AnonymizerEngine()
 
-tz_pattern = Pattern(name="israeli_tz", regex=r"\b\d{4}\b", score=0.9)
+tz_pattern = Pattern(name="israeli_tz", regex=r"\b\d{9}\b", score=0.9)
 tz_recognizer = PatternRecognizer(supported_entity="IL_TZ", patterns=[tz_pattern])
 analyzer.registry.add_recognizer(tz_recognizer)
 
-hebrew_names_recognizer = PatternRecognizer(
+context_regex = r"(?:הלקוח|החולה|שם:|קוראים לי)\s+[א-ת]+(?:\s+[א-ת]+)?"
+context_pattern = Pattern(name="hebrew_name_context", regex=context_regex, score=0.8)
+
+context_recognizer = PatternRecognizer(
     supported_entity="HEBREW_NAME", 
-    deny_list=["ישראל ישראלי", "משה כהן", "גאיה", "שני"]
+    patterns=[context_pattern]
 )
-analyzer.registry.add_recognizer(hebrew_names_recognizer)
+analyzer.registry.add_recognizer(context_recognizer)
 
 class DocumentRequest(BaseModel):
     text: str
